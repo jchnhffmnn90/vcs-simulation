@@ -25,24 +25,36 @@ class Repository:
         self._next_id += 1
         return new_commit
 
+    def find_index(self, commit_id: int) -> int | None:
+        """Return the index of a commit with the given ID, or None if not found."""
+        for idx, item in enumerate(self.commits):
+            if item.id == commit_id:
+                return idx
+        return None
+
+    def get_commit(self, commit_id: int) -> Commit | None:
+        """Return the commit with the given ID, or None if not found."""
+        index = self.find_index(commit_id)
+        return self.commits[index] if index is not None else None
+
+    def format_log(self) -> list[str]:
+        """Generate formatted lines of the commit history (newest first)."""
+        if not self.commits:
+            return ["Keine Commits vorhanden."]
+
+        lines = ["--- Commit Log (neuester zuerst) ---"]
+        for item in reversed(self.commits):
+            lines.append(f"Commit #{item.id}: {item.message}")
+        return lines
+
     def log(self) -> None:
         """Print all commits in descending chronological order (newest first)."""
-        if not self.commits:
-            print("Keine Commits vorhanden.")
-            return
-
-        print("--- Commit Log (neuester zuerst) ---")
-        for item in reversed(self.commits):
-            print(f"Commit #{item.id}: {item.message}")
+        for line in self.format_log():
+            print(line)
 
     def revert(self, commit_id: int) -> bool:
         """Reset repository to specified commit by removing later commits."""
-        target_index: int | None = None
-        for idx, item in enumerate(self.commits):
-            if item.id == commit_id:
-                target_index = idx
-                break
-
+        target_index = self.find_index(commit_id)
         if target_index is None:
             print(f"Fehler: Commit mit ID {commit_id} existiert nicht.")
             return False
